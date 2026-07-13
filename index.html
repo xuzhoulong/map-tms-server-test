@@ -6,6 +6,7 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="stylesheet" href="./libs/Cesium/Widgets/widgets.css" />
+    <script>window.CESIUM_BASE_URL = './libs/Cesium/';</script>
     <script type="text/javascript" src="./libs/Cesium/Cesium.js"></script>
     <style>
       .tool {
@@ -64,7 +65,7 @@
     <div id="map" style="margin: 0 auto; width: 100%; height: 100%"></div>
     <div class="tool">
       <label>TMS (Tile Map Service) 地图服务:</label>
-      <input type="text" id="urlInput" value="/tiles/{z}/{x}/{y}.png" />
+      <input type="text" id="urlInput" value="./tiles/{z}/{x}/{y}.png" />
       <span class="hint">(按 Enter 或点击其他地方生效)</span>
     </div>
     <script type="text/javascript">
@@ -105,7 +106,7 @@
       // 当前影像图层引用（用于后续替换）
       let currentImageryLayer = null;
       // 默认服务器地址
-      let serverUrl = "/tiles/{z}/{x}/{y}.png";
+      let serverUrl = "./tiles/{z}/{x}/{y}.png";
 
       // 创建并添加影像提供器的函数
       function updateImageryProvider(url) {
