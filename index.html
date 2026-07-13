@@ -1,0 +1,172 @@
+<!--********************************************************************
+* by xuzhoulong
+*********************************************************************-->
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="./libs/Cesium/Widgets/widgets.css" />
+    <script type="text/javascript" src="./libs/Cesium/Cesium.js"></script>
+    <style>
+      .tool {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        z-index: 9;
+        color: #fff;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 10px 15px;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+      .tool input {
+        width: 400px;
+        padding: 4px 8px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.9);
+        font-size: 13px;
+      }
+      .tool input:focus {
+        outline: none;
+        border-color: #4a9eff;
+        background: #fff;
+      }
+      .tool .hint {
+        font-size: 12px;
+        color: #aaa;
+        margin-left: 8px;
+      }
+      /* 额外隐藏可能残留的 Cesium 商标和 logo */
+      .cesium-widget-credits,
+      .cesium-credit-textContainer,
+      .cesium-credit-logoContainer {
+        display: none !important;
+      }
+      /* 隐藏 Cesium 的底部信息栏 */
+      .cesium-viewer-bottom {
+        display: none !important;
+      }
+    </style>
+  </head>
+
+  <body
+    style="
+      margin: 0;
+      overflow: hidden;
+      background: #fff;
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+    "
+  >
+    <div id="map" style="margin: 0 auto; width: 100%; height: 100%"></div>
+    <div class="tool">
+      <label>TMS (Tile Map Service) 地图服务:</label>
+      <input type="text" id="urlInput" value="/tiles/{z}/{x}/{y}.png" />
+      <span class="hint">(按 Enter 或点击其他地方生效)</span>
+    </div>
+    <script type="text/javascript">
+      // 初始化 Viewer，去除时间轴、Logo 和商标
+      const viewer = new Cesium.Viewer("map", {
+        imageryProvider: false, // 不加载默认影像
+        baseLayerPicker: false, // 隐藏图层选择器
+        timeline: false, // 🎯 隐藏时间轴
+        animation: false, // 🎯 隐藏动画控制器（左下角的播放/暂停控件）
+        fullscreenButton: false, // 🎯 隐藏全屏按钮
+        geocoder: false, // 🎯 隐藏地理编码搜索框
+        homeButton: false, // 🎯 隐藏主页按钮
+        infoBox: false, // 🎯 隐藏信息框
+        sceneModePicker: false, // 🎯 隐藏场景模式选择器（3D/2D/哥伦布视图）
+        selectionIndicator: false, // 🎯 隐藏选择指示器
+        navigationHelpButton: false, // 🎯 隐藏导航帮助按钮
+        navigationInstructionsInitiallyVisible: false, // 🎯 隐藏导航提示
+        creditContainer: document.createElement("div"), // 🎯 将信用信息容器替换为空 div
+        creditViewport: document.createElement("div"), // 🎯 将信用信息视口替换为空 div
+        // 如果有 Cesium Ion 访问令牌，可以移除或设置为空
+        // accessToken: '', // 如果不需要 Cesium Ion 服务
+      });
+
+      // 🎯 直接设置视角到中国上方（无动画，瞬间切换）
+      viewer.camera.setView({
+        destination: Cesium.Cartesian3.fromDegrees(
+          105.0, // 经度：中国中心大约东经105°
+          35.0, // 纬度：中国中心大约北纬35°
+          19000000, // 高度：800万米（约8000公里）
+        ),
+        orientation: {
+          heading: 0.0, // 朝向：正北
+          pitch: -Cesium.Math.PI / 2, // 俯仰角：-90° 垂直向下俯瞰
+          roll: 0.0, // 翻滚角：0
+        },
+      });
+
+      // 当前影像图层引用（用于后续替换）
+      let currentImageryLayer = null;
+      // 默认服务器地址
+      let serverUrl = "/tiles/{z}/{x}/{y}.png";
+
+      // 创建并添加影像提供器的函数
+      function updateImageryProvider(url) {
+        if (!url || url.trim() === "") {
+          console.warn("URL 不能为空");
+          return;
+        }
+
+        // 去除首尾空格
+        const trimmedUrl = url.trim();
+
+        try {
+          // 创建新的影像提供器
+          const newProvider = new Cesium.UrlTemplateImageryProvider({
+            url: trimmedUrl,
+          });
+
+          // 如果已经存在图层，先移除
+          if (currentImageryLayer) {
+            viewer.imageryLayers.remove(currentImageryLayer);
+          }
+
+          // 添加新图层
+          currentImageryLayer =
+            viewer.imageryLayers.addImageryProvider(newProvider);
+
+          // 更新全局变量
+          serverUrl = trimmedUrl;
+
+          console.log(`✅ 地图服务已更新: ${trimmedUrl}`);
+        } catch (error) {
+          console.error("❌ 创建影像提供器失败:", error);
+          alert("URL 格式无效，请检查后重试");
+        }
+      }
+
+      // 获取输入框元素
+      const urlInput = document.getElementById("urlInput");
+
+      // 方式1: 按 Enter 键触发更新
+      urlInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+          updateImageryProvider(this.value);
+          // 失去焦点，让输入框显示完整内容
+          this.blur();
+        }
+      });
+
+      // 方式2: 失去焦点（点击其他地方）时触发更新
+      urlInput.addEventListener("blur", function () {
+        // 只有值发生变化时才更新
+        if (this.value.trim() !== serverUrl) {
+          updateImageryProvider(this.value);
+        }
+      });
+
+      // 初始加载默认瓦片
+      updateImageryProvider(serverUrl);
+
+      // 额外通过 CSS 彻底隐藏底部 credit 区域（如果仍有残留）
+      // 这部分已经在 style 中定义了
+    </script>
+  </body>
+</html>
