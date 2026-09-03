@@ -108,6 +108,14 @@
       // 默认服务器地址
       let serverUrl = "./tiles/{z}/{x}/{y}.png";
 
+      // 🎯 判断地址栏是否有 url 参数（支持 url / serverUrl / tms 三种写法），
+      //    如果有的话将其值赋给 serverUrl 用于加载瓦片
+      function getServerUrlFromAddress() {
+        const params = new URLSearchParams(window.location.search);
+        // 依次尝试常见的参数名
+        return decodeURIComponent(params.get("url")) || params.get("serverUrl") || params.get("tms");
+      }
+
       // 创建并添加影像提供器的函数
       function updateImageryProvider(url) {
         if (!url || url.trim() === "") {
@@ -146,6 +154,13 @@
       // 获取输入框元素
       const urlInput = document.getElementById("urlInput");
 
+      // 若地址栏携带了 url 参数，则覆盖默认地址并同步到输入框
+      const urlParam = getServerUrlFromAddress();
+      if (urlParam && urlParam.trim() !== "") {
+        serverUrl = urlParam.trim();
+        urlInput.value = serverUrl;
+      }
+
       // 方式1: 按 Enter 键触发更新
       urlInput.addEventListener("keydown", function (event) {
         if (event.key === "Enter") {
@@ -163,7 +178,7 @@
         }
       });
 
-      // 初始加载默认瓦片
+      // 初始加载瓦片（优先使用地址栏 url 参数，否则使用默认地址）
       updateImageryProvider(serverUrl);
 
       // 额外通过 CSS 彻底隐藏底部 credit 区域（如果仍有残留）
