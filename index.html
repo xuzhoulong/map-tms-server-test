@@ -6,7 +6,9 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="stylesheet" href="./libs/Cesium/Widgets/widgets.css" />
-    <script>window.CESIUM_BASE_URL = './libs/Cesium/';</script>
+    <script>
+      window.CESIUM_BASE_URL = "./libs/Cesium/";
+    </script>
     <script type="text/javascript" src="./libs/Cesium/Cesium.js"></script>
     <style>
       .tool {
@@ -113,9 +115,9 @@
       function getServerUrlFromAddress() {
         const params = new URLSearchParams(window.location.search);
         // 依次尝试常见的参数名
-        let url = params.get("url")
-        if(url){
-          return decodeURIComponent(url)
+        let url = params.get("url");
+        if (url) {
+          return decodeURIComponent(url);
         }
       }
 
@@ -159,7 +161,6 @@
 
       // 若地址栏携带了 url 参数，则覆盖默认地址并同步到输入框
       const urlParam = getServerUrlFromAddress();
-      debugger
       if (urlParam && urlParam.trim() !== "") {
         serverUrl = urlParam.trim();
         urlInput.value = serverUrl;
