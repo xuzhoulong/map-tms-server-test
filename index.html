@@ -113,7 +113,10 @@
       function getServerUrlFromAddress() {
         const params = new URLSearchParams(window.location.search);
         // 依次尝试常见的参数名
-        return decodeURIComponent(params.get("url")) || params.get("serverUrl") || params.get("tms");
+        let url = params.get("url")
+        if(url){
+          return decodeURIComponent(url)
+        }
       }
 
       // 创建并添加影像提供器的函数
@@ -156,6 +159,7 @@
 
       // 若地址栏携带了 url 参数，则覆盖默认地址并同步到输入框
       const urlParam = getServerUrlFromAddress();
+      debugger
       if (urlParam && urlParam.trim() !== "") {
         serverUrl = urlParam.trim();
         urlInput.value = serverUrl;
